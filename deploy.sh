@@ -115,6 +115,23 @@ watch_mode() {
     done
 }
 
+# ---- 直接发布 content/ 变更 ----
+publish_content() {
+    cd "$BLOG_DIR"
+    if git diff --quiet && git diff --cached --quiet; then
+        warn "没有 content 变更，跳过"
+        return 0
+    fi
+    info "检测到 content/ 有变更，直接构建并推送..."
+    if hugo --minify 2>&1; then
+        info "构建成功"
+    else
+        warn "构建有告警，继续部署"
+    fi
+    git_deploy
+    info "🎉 全部完成！https://jace1cch.github.io/"
+}
+
 # ---- 入口 ----
 case "${1:-}" in
     -w|--watch)
@@ -124,22 +141,41 @@ case "${1:-}" in
         echo "用法: bash deploy.sh [导出文件路径]"
         echo "       bash deploy.sh -w        (watch 模式)"
         echo ""
+        echo "不带参数 = 检测 content/ 变更 → 直接构建推送（写 md 后的标准用法）"
+        echo "带参数    = 处理 Schrödinger 导出 zip → 构建推送"
+        echo ""
         echo "环境变量:"
         echo "  LOGSEQ_EXPORT_DIR  watch 模式监控目录 (默认: ~/Downloads)"
         exit 0
         ;;
     "")
-        # 没有参数：自动找最新的 zip
-        latest_zip="$(ls -t "$LOGSEQ_EXPORT_DIR"/*.zip 2>/dev/null | head -1 || true)"
-        if [ -z "$latest_zip" ]; then
-            error "在 $LOGSEQ_EXPORT_DIR 中没有找到 zip 文件"
-            echo "请指定导出文件路径: bash deploy.sh /path/to/export.zip"
-            exit 1
+        # 无参数：先检查 content/ 是否有变更
+        cd "$BLOG_DIR"
+        if git diff --quiet && git diff --cached --quiet; then
+            # content 没变，回退到自动找 zip
+            local latest_zip=""
+            [ -d "$LOGSEQ_EXPORT_DIR" ] && latest_zip="$(ls -t "$LOGSEQ_EXPORT_DIR"/*.zip 2>/dev/null | head -1 || true)"
+            if [ -n "$latest_zip" ]; then
+                info "自动找到最近的导出: $(basename "$latest_zip")"
+                run_once "$latest_zip"
+            else
+                error "没有 content 变更，也没有找到 zip 文件，没什么可发布"
+                exit 1
+            fi
+        else
+            publish_content
         fi
-        info "自动找到最近的导出: $(basename "$latest_zip")"
-        run_once "$latest_zip"
         ;;
     *)
-        run_once "$1"
+        # 带参数：如果参数是 .md 文件或目录，直接发布 content
+        if [ -f "$1" ] && [[ "$1" == *.md ]]; then
+            info "检测到 .md 文件，直接发布"
+            publish_content
+        elif [ -d "$1" ]; then
+            info "检测到目录，直接发布"
+            publish_content
+        else
+            run_once "$1"
+        fi
         ;;
 esac
