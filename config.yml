@@ -1,26 +1,25 @@
-baseURL: https://example.com/
-languageCode: en-us
-title: Author Name
+baseURL: https://YOUR_GITHUB_USERNAME.github.io/
+locale: zh-cn
+defaultContentLanguage: zh-cn
+title: Jace
 theme: "PaperMod"
 
 params:
     homeInfoParams:
-        Title: Hello World 👋
-        Content: This is a sample hugo template
+        Title: Jace's Notes 👋
+        Content: 用 Logseq 记录的思考与知识
 
     socialIcons: # optional
         - name: "github"
-          url: "https://github.com/sawhney17"
-        - name: "youtube"
-          url: "https://www.youtube.com/channel/UCjMJeOCEAG2XFtd9JvZwomw"
-        - name: "twitter"
-          url: "https://twitter.com/aryansawhney17"
-        - name: "kofi" 
-          url: "https://buymeacoffee.com/sawhney17"
+          url: "https://github.com/YOUR_GITHUB_USERNAME"
         - name: "rss"
-          url: "https://aryansawhney.com/index.xml"
+          url: "/index.xml"
     ShowReadingTime: true
-    author: "One Nice Person"
+    ShowCodeCopyButtons: true
+    author: "Jace"
+
+social:
+  facebook_admin: ""
 
 outputs:
     home:
