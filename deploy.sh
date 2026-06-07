@@ -153,7 +153,7 @@ case "${1:-}" in
         cd "$BLOG_DIR"
         if git diff --quiet && git diff --cached --quiet; then
             # content 没变，回退到自动找 zip
-            local latest_zip=""
+            latest_zip=""
             [ -d "$LOGSEQ_EXPORT_DIR" ] && latest_zip="$(ls -t "$LOGSEQ_EXPORT_DIR"/*.zip 2>/dev/null | head -1 || true)"
             if [ -n "$latest_zip" ]; then
                 info "自动找到最近的导出: $(basename "$latest_zip")"
