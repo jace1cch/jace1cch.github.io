@@ -1,4 +1,4 @@
-baseURL: https://YOUR_GITHUB_USERNAME.github.io/
+baseURL: https://jace1cch.github.io/
 locale: zh-cn
 defaultContentLanguage: zh-cn
 title: Jace
@@ -11,7 +11,7 @@ params:
 
     socialIcons: # optional
         - name: "github"
-          url: "https://github.com/YOUR_GITHUB_USERNAME"
+          url: "https://github.com/jace1cch"
         - name: "rss"
           url: "/index.xml"
     ShowReadingTime: true
