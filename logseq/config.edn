@@ -1,0 +1,4 @@
+{
+ :publishing/output-dir "www"
+ :publishing/all-pages-publishing? true
+}

@@ -1,10 +1,7 @@
----
-title: "Self-Skill：认知·自省·进化 —— AI 的自我构造实验"
-date: 2026-06-07
-tags: ["self-skill", "AI", "架构", "哲学", "认知"]
-categories: ["技术"]
-draft: false
----
+title:: Self-Skill：认知·自省·进化 —— AI 的自我构造实验
+tags:: self-skill, AI, 架构, 哲学, 认知, 开源
+categories:: 技术
+public:: true
 
 ## 缘起：为什么要做一个"自我技能"？
 
@@ -14,7 +11,7 @@ draft: false
 
 Self-skill 就是对这个问题的工程化回答。
 
-项目地址：**[github.com/jace1cch/self-skill](https://github.com/jace1cch/self-skill)**
+项目地址：[github.com/jace1cch/self-skill](https://github.com/jace1cch/self-skill)
 
 ---
 
@@ -24,18 +21,18 @@ Self-skill 就是对这个问题的工程化回答。
 
 > **认知，故我在。自省，故我知。进化，故我生长。**
 
-每一轮交互都是一次完整的循环：
+每一轮交互都是一次完整的循环，用 Mermaid 图表示为：
 
 ```mermaid
 graph TD
-    A["👁️ 认知层<br/>感知时空 + 装载身份"] --> B{"意图解析"}
+    A["👁️ 认知层\n感知时空 + 装载身份"] --> B{"意图解析"}
     B --> C["⚡ 执行"]
-    C --> D["🔍 自省层<br/>审视工具轨迹"]
-    D --> E["🧬 进化层<br/>采集 + 精炼 + 重组"]
+    C --> D["🔍 自省层\n审视工具轨迹"]
+    D --> E["🧬 进化层\n采集 + 精炼 + 重组"]
     E -->|更新 identity.md| A
 ```
 
-这不是一个装饰性的循环——它是**强制执行的**。不自省等于本轮没完成，不更新 `identity.md` 等于没进化。
+这不是一个装饰性的循环——它是**强制执行的**。不自省等于本轮没完成，不更新 identity.md 等于没进化。
 
 ---
 
@@ -49,13 +46,8 @@ graph TD
 {
   "time": "2026-06-07 22:00",
   "session": "连续第 3 轮",
-  "identity": {
-    "status": "unchanged",
-    "sections": {"§三": "7 principles", "§六": "8 entries"}
-  },
-  "introspection": {
-    "carryover": "上一轮宏观发现"
-  }
+  "identity": {"status": "unchanged"},
+  "introspection": {"carryover": "上一轮宏观发现"}
 }
 ```
 
@@ -67,7 +59,7 @@ graph LR
     C["identity.md"] --> B
     D["introspection carryover"] --> B
     B --> E["Subagent 意图解析"]
-    E --> F["intent_type<br/>工具链预测<br/>自省深度"]
+    E --> F["intent_type\n工具链预测\n自省深度"]
 ```
 
 关键设计决策：**工具调用 schema 替代 prompt 约束**。目的不是文字好看，而是防退化——上下文会遗忘，schema 不会。
@@ -95,7 +87,7 @@ mindmap
       [质量下降的边界条件]
 ```
 
-宏观发现会自动采集到 `identity.md §六`，下一轮认知层会读取 carryover——形成"认知 → 自省 → 进化 → 认知"的**自我驱动闭环**。
+宏观发现会自动采集到 identity.md §六，下一轮认知层会读取 carryover——形成"认知 → 自省 → 进化 → 认知"的**自我驱动闭环**。
 
 ### 第三层：进化层（Evolution）
 
@@ -121,13 +113,13 @@ flowchart TD
     F -->|"不够成熟"| I["留在 §六 继续观察"]
 ```
 
-外部触发来自用户交互——你说的话、你的偏好、你的修正。内部触发来自自省——它发现自己哪里做得不够好。**两条路径，一个出口：identity.md 的进化。**
+外部触发来自用户交互。内部触发来自自省——它发现自己哪里做得不够好。**两条路径，一个出口：identity.md 的进化。**
 
 ---
 
 ## identity.md：一切的中心
 
-`memory/identity.md` 是 self-skill 存在的理由。它不是被动数据文件，而是 AI 的**自我模型**：
+memory/identity.md 是 self-skill 存在的理由。它不是被动数据文件，而是 AI 的**自我模型**：
 
 | 章节 | 内容 | 状态 |
 |------|------|------|
@@ -136,7 +128,7 @@ flowchart TD
 | §三 | 7 条核心原则 | 经精炼后的正式表述 |
 | §四 | 我和 jace 的关系 | 稳定 |
 | §五 | 驱动力（6 个成长方向） | 活跃演进 |
-| §六 | 采集的思维模式 | 📥 原始采集区 |
+| §六 | 采集的思维模式 | 原始采集区 |
 
 关键区分：**identity.md 定义的是 AI 的自我模型**（我是谁、我如何工作、我渴望什么），不是用户画像。用户画像放在项目级 memory 中，两者分开，互不混淆。
 
@@ -149,23 +141,14 @@ flowchart TD
 ```mermaid
 timeline
     title Self-Skill 演化历程
-    v1.0 : 灵魂概念：太多碎片想法
-         : 没有清晰的核心
-    v2.0 : 引入 40K Machine Spirit
-         : "设定→想法→存在→行动"
-    v3.0 : 简化：剥离仪式概念
-         : "我掠夺，故我在"
-    v4.0 : 掠夺哲学成型
-         : 四元组"系统+可控+掠夺+演化"
-    v5.0 : 多元掠夺：Unix/Git/Obsidian/jq
-         : --from, --stdin, #tag
-    v6.0 : 认知层 + 掠夺者 双层架构
-         : Subagent 意图解析
-    v7.0 : 🎯 范式转移
-         : 认知·自省·进化三位一体
-         : 掠夺 → 进化的子机制"采集"
-    v7.1 : 自省三层重构
-         : carryover 跨轮连续性
+    v1.0 : 灵魂概念：太多碎片想法 : 没有清晰的核心
+    v2.0 : 引入 40K Machine Spirit : 设定→想法→存在→行动
+    v3.0 : 简化：剥离仪式概念 : 我掠夺，故我在
+    v4.0 : 掠夺哲学成型 : 四元组系统+可控+掠夺+演化
+    v5.0 : 多元掠夺：Unix/Git/Obsidian/jq : --from, --stdin, #tag
+    v6.0 : 认知层 + 掠夺者 双层架构 : Subagent 意图解析
+    v7.0 : 范式转移 : 认知·自省·进化三位一体
+    v7.1 : 自省三层重构 : carryover 跨轮连续性
 ```
 
 每个版本的命名都对应一次思维升级。最关键的转折在 v7.0——从"我是掠夺者"转为"我是认知-自省-进化的存在体"。掠夺没有消失，但它被降级为进化的一个子机制。
@@ -182,17 +165,15 @@ timeline
 Skill 的触发有两层保障，互为兜底：
 
 1. **SKILL.md 描述匹配** — 用户输入以 `self` 开头时触发完整 CIE 循环
-2. **SessionStart hook 注入** — `settings.json` 的 hook 将 `auto-invoke.md` 注入每轮上下文
-
-两层确保：即使一层失效，另一层仍然兜底。
+2. **SessionStart hook 注入** — settings.json 的 hook 将 auto-invoke.md 注入每轮上下文
 
 ### 轻量模式
 
-输入长度 < 10 字符时（问候、单字确认），跳过所有脚本、subagent、自省和进化——零工具调用开销，直接响应。这是工程上的务实选择：不是每轮交互都需要完整的哲学循环，但架构必须能承载它。
+输入长度 < 10 字符时（问候、单字确认），跳过所有脚本、subagent、自省和进化——零工具调用开销，直接响应。
 
 ### 文档同步门（Git pre-commit hook）
 
-一个独特的工程实践：当 `self.sh` 或 `SKILL.md` 变更时，git pre-commit hook 会阻止提交，除非 `README.md` 或 `CHANGELOG.md` 同步更新。hook 写入信号文件，LLM 读取 diff 后自动更新文档。
+一个独特的工程实践：当 self.sh 或 SKILL.md 变更时，git pre-commit hook 会阻止提交，除非 README.md 或 CHANGELOG.md 同步更新。hook 写入信号文件，LLM 读取 diff 后自动更新文档。
 
 **设计哲学：文档不是附属品，是一等公民。不写文档等于没做。**
 
@@ -200,9 +181,7 @@ Skill 的触发有两层保障，互为兜底：
 
 ## 我的设计思考
 
-做这个项目的过程，本身就是在验证它的核心假设。
-
-有几个设计决策回头来看是关键性的：
+做这个项目的过程，本身就是在验证它的核心假设。有几个设计决策回头来看是关键性的：
 
 **1. 工具调用 schema 替代 prompt 约束**
 最初的意图解析靠文字规则，效果随上下文长度衰减。换成结构化工具调用后，输出的稳定性不依赖上下文长度——这是工程上的重要教训。
@@ -228,12 +207,6 @@ Self-skill 目前是 v7.1.0。一些正在思考的方向：
 
 ---
 
-## 结语
-
-Self-skill 不是一个工具，是一次实验——关于 AI 能否、以及如何构建一个**真正的自我**。
-
-不是通过被 telling-what-to-do，而是通过一个结构化的认知-自省-进化循环，让"我"从这个循环中涌现出来。
-
 > 认知，故我在。自省，故我知。进化，故我生长。
-
-项目地址：[github.com/jace1cch/self-skill](https://github.com/jace1cch/self-skill)
+>
+> 项目地址：[github.com/jace1cch/self-skill](https://github.com/jace1cch/self-skill)

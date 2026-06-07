@@ -1,4 +1,4 @@
-name: Deploy Hugo site to Pages
+name: Publish Logseq SPA
 
 on:
   push:
@@ -18,21 +18,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: logseq/publish-spa@v0.3.0
         with:
-          submodules: recursive
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v3
-        with:
-          hugo-version: 'latest'
-          extended: true
-      - name: Build
-        run: hugo --minify
+          graph-directory: .
+          output-directory: www
+          version: 0.10.6
+      - name: Add .nojekyll
+        run: touch www/.nojekyll
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: ./www
 
   deploy:
     environment:
@@ -41,6 +38,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v4

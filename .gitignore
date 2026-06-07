@@ -1,6 +1,16 @@
-public/
-resources/
-.hugo_build.lock
+# Logseq
+logseq/bak/
+logseq/.recycle/
+logseq/.db/
+logseq/*.md
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Build output
+www/
+dist/
+
+# Logs
 *.log
-tmp/
