@@ -53,16 +53,13 @@ jobs:
           sed -i 's/\[frontend.components.whiteboard :as whiteboard\]/[frontend.components.whiteboard :as whiteboard]\n            [frontend.handler.graph :as graph-handler]/' "$PATCH_FILE"
 
           # 补丁B: 追加导出语句 + 强制调用
-          cat >> "$PATCH_FILE" << 'EOF'
-
-;; === PATCH: Force include graph handler (prevents Closure tree-shaking) ===
-(js/goog.exportSymbol "LogseqGraph" graph-handler/build-global-graph)
-
-(defn- -keep-graph
-  []
-  (try (graph-handler/build-global-graph "light" {:orphan-pages? true})
-       (catch js/Error _ nil)))
-EOF
+          echo '' >> "$PATCH_FILE"
+          echo ';; === PATCH: prevent Closure tree-shaking ===' >> "$PATCH_FILE"
+          echo '(js/goog.exportSymbol "LogseqGraph" graph-handler/build-global-graph)' >> "$PATCH_FILE"
+          echo '(defn- -keep-graph' >> "$PATCH_FILE"
+          echo '  []' >> "$PATCH_FILE"
+          echo '  (try (graph-handler/build-global-graph "light" {:orphan-pages? true})' >> "$PATCH_FILE"
+          echo '       (catch js/Error _ nil)))' >> "$PATCH_FILE"
 
           echo ""
           echo "=== 补丁后 ==="
