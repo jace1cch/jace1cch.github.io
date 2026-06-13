@@ -1,4 +1,3 @@
-title:: 个人时间线
 tags:: self, timeline
 public:: true
 

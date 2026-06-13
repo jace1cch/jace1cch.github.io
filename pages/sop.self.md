@@ -1,4 +1,3 @@
-title:: 个人工作流 SOP
 tags:: workflow, self
 public:: true
 

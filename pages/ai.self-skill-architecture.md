@@ -1,4 +1,3 @@
-title:: Self-Skill：认知·自省·进化 —— AI 的自我构造实验
 tags:: self-skill, AI,harness
 categories:: 技术
 public:: true
