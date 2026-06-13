@@ -31,6 +31,9 @@ jobs:
       - name: Add .nojekyll file
         run: touch www/.nojekyll
 
+      - name: Generate graph visualization
+        run: node scripts/inject-graph.js
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
