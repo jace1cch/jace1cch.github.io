@@ -1,4 +1,4 @@
-name: Publish Logseq SPA (with Graph)
+name: Publish Logseq SPA
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -14,98 +14,21 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
-env:
-  LOGSEQ_VERSION: "0.10.15"
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # 克隆 Logseq 源码（只取指定 tag）
-      - name: Checkout Logseq source
-        uses: actions/checkout@v4
+      - name: Logseq Publish
+        uses: logseq/publish-spa@main
         with:
-          repository: logseq/logseq
-          path: .logseq-logseq
-          ref: ${{ env.LOGSEQ_VERSION }}
-          fetch-depth: 1
+          graph-directory: ./tech
+          output-directory: www
+          version: 0.10.6
+          accent-color: blue
 
-      # 克隆 publish-spa 工具
-      - name: Checkout publish-spa
-        uses: actions/checkout@v4
-        with:
-          repository: logseq/publish-spa
-          path: .logseq-publish-spa
-          ref: v0.3.1
-
-      # 📌 关键补丁：在 publishing.cljs 中加入 graph handler 引用
-      # 防止 Closure 编译器树摇掉图谱模块
-      - name: Patch publishing.cljs to include graph handler
-        run: |
-          PATCH_FILE=".logseq-logseq/src/main/frontend/publishing.cljs"
-          # 1. 在 :require 列表中加入 graph-handler
-          sed -i 's/\[frontend.components.whiteboard :as whiteboard\]/[frontend.components.whiteboard :as whiteboard]\n            [frontend.handler.graph :as graph-handler]/' "$PATCH_FILE"
-          # 2. 文件末尾加入 defonce 强制引用（防止 Closure 树摇）
-          echo '(defonce _graph-ref graph-handler/build-global-graph)' >> "$PATCH_FILE"
-          grep -n "graph-handler" "$PATCH_FILE"
-          echo "✅ 补丁已应用（require + defonce）"
-
-      # 清除旧的缓存（避免使用未打补丁的 static 缓存）
-      - name: Clear old static cache
-        run: rm -rf .logseq-logseq/static
-
-      - name: Set up Clojure
-        uses: DeLaGuardo/setup-clojure@master
-        with:
-          cli: 1.11.1.1182
-          bb: 1.2.174
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Cache Logseq static
-        uses: actions/cache@v3
-        id: logseq-static-all
-        with:
-          path: .logseq-logseq/static
-          key: ${{ runner.os }}-logseq-static-all-${{ env.LOGSEQ_VERSION }}-graph-fix-v2
-
-      - name: Build Logseq static + publishing JS
-        if: steps.logseq-static-all.outputs.cache-hit != 'true'
-        run: |
-          cd .logseq-logseq
-          yarn install --frozen-lockfile
-          yarn gulp:build
-          clojure -M:cljs release publishing
-        shell: bash
-        timeout-minutes: 20
-
-      # 安装 publish-spa 依赖并导出
-      - name: Install publish-spa deps
-        run: |
-          cd .logseq-publish-spa
-          yarn install --frozen-lockfile
-
-      - name: Fetch nbb deps
-        run: |
-          cd .logseq-publish-spa
-          yarn nbb-logseq -e ':fetching-deps'
-
-      - name: Export graph to www/
-        run: |
-          mkdir -p www
-          cd .logseq-publish-spa
-          node publish_spa.mjs \
-            ${{ github.workspace }}/www \
-            --static-directory ${{ github.workspace }}/.logseq-logseq/static \
-            --directory ${{ github.workspace }}/tech \
-            --theme-mode light
-
-      - name: Add .nojekyll
+      - name: Add .nojekyll file
         run: touch www/.nojekyll
 
       - name: Upload artifact
