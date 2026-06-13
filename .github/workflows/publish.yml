@@ -1,4 +1,4 @@
-name: Publish Logseq SPA
+name: Deploy www/
 
 on:
   push:
@@ -15,31 +15,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: logseq/publish-spa@v0.3.1
-        with:
-          graph-directory: ./tech
-          output-directory: www
-          version: 0.10.15
-      - name: Add .nojekyll
-        run: touch www/.nojekyll
-      - name: Generate graph page
-        run: node scripts/build-graph.js tech/pages tech/journals www/graph.html
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./www
-
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
     steps:
+      - uses: actions/checkout@v4
+      - name: Add .nojekyll
+        run: touch www/.nojekyll
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./www
       - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v4
