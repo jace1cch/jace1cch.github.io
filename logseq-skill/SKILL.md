@@ -42,9 +42,12 @@ WSL / Local
 
 ```bash
 cd ~/prj/blog
-git add -A
-git commit -m "📝 更新笔记"
-git push
+
+# 方式一：一键脚本
+bash logseq-skill/scripts/sync.sh
+
+# 方式二：手动
+git add -A && git commit -m "📝 更新笔记" && git push
 ```
 
 ### 等待部署
@@ -85,14 +88,17 @@ public:: true
 
 ```
 blog/
-├── pages/              # 笔记页面（.md 文件）
-├── journals/           # 日记（自动按日期命名）
-├── assets/             # 图片、附件
-├── logseq/             # Logseq 内部配置
-│   └── config.edn      # 发布配置
-├── .github/workflows/  # GitHub Actions 工作流
-├── references/         # 参考文档
-└── scripts/            # 自动化脚本
+├── pages/                    # 笔记页面（.md 文件）
+├── journals/                 # 日记（自动按日期命名）
+├── assets/                   # 图片、附件
+├── logseq/                   # Logseq 内部配置
+│   └── config.edn            # 发布配置
+├── .github/workflows/        # GitHub Actions 工作流
+├── logseq-skill/             # ← 本技能文档
+│   ├── SKILL.md              #    主流程说明
+│   ├── references/           #    参考文档
+│   └── scripts/              #    自动化脚本
+└── ...
 ```
 
 ### 最佳实践
@@ -119,3 +125,5 @@ blog/
 - [Git 命令速查](references/git-commands.md)
 - [一键同步脚本](scripts/sync.sh)
 - [新设备初始化脚本](scripts/setup-new-device.sh)
+
+> 所有文件均位于 `logseq-skill/` 目录下。
