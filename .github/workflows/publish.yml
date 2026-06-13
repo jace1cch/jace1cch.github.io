@@ -52,14 +52,13 @@ jobs:
           # 补丁A: 在 require 中加入 graph-handler
           sed -i 's/\[frontend.components.whiteboard :as whiteboard\]/[frontend.components.whiteboard :as whiteboard]\n            [frontend.handler.graph :as graph-handler]/' "$PATCH_FILE"
 
-          # 补丁B: 追加导出语句 + 强制调用
+          # 补丁B: 用 ^:export 强制导出图谱函数（防树摇）
           echo '' >> "$PATCH_FILE"
-          echo ';; === PATCH: prevent Closure tree-shaking ===' >> "$PATCH_FILE"
-          echo '(js/goog.exportSymbol "LogseqGraph" graph-handler/build-global-graph)' >> "$PATCH_FILE"
-          echo '(defn- -keep-graph' >> "$PATCH_FILE"
+          echo ';; === PATCH: Force export graph handler (prevents tree-shaking) ===' >> "$PATCH_FILE"
+          echo '(defn ^:export keep-graph' >> "$PATCH_FILE"
+          echo '  "Keep graph handler from being tree-shaken by Closure compiler"' >> "$PATCH_FILE"
           echo '  []' >> "$PATCH_FILE"
-          echo '  (try (graph-handler/build-global-graph "light" {:orphan-pages? true})' >> "$PATCH_FILE"
-          echo '       (catch js/Error _ nil)))' >> "$PATCH_FILE"
+          echo '  (graph-handler/build-global-graph "light" {:orphan-pages? true}))' >> "$PATCH_FILE"
 
           echo ""
           echo "=== 补丁后 ==="
@@ -71,11 +70,11 @@ jobs:
           COUNT=$(grep -c 'graph-handler' "$PATCH_FILE")
           echo ""
           echo "graph-handler 引用次数: $COUNT"
-          if [ "$COUNT" -lt 3 ]; then
-            echo "❌ 补丁失败！graph-handler 引用不足 ($COUNT < 3)"
+          if [ "$COUNT" -lt 2 ]; then
+            echo "❌ 补丁失败！graph-handler 引用不足 ($COUNT < 2)"
             exit 1
           fi
-          grep "exportSymbol" "$PATCH_FILE" || (echo "❌ exportSymbol 缺失" && exit 1)
+          grep "keep-graph" "$PATCH_FILE" || (echo "❌ keep-graph 缺失" && exit 1)
           echo "✅ 补丁验证通过"
 
       - name: Set up Clojure
@@ -95,7 +94,7 @@ jobs:
         id: logseq-static-all
         with:
           path: .logseq-logseq/static
-          key: ${{ runner.os }}-logseq-static-${{ env.LOGSEQ_VERSION }}-v5
+          key: ${{ runner.os }}-logseq-static-${{ env.LOGSEQ_VERSION }}-v6
 
       # 构建 Logseq（仅缓存未命中时执行，约12分钟）
       - name: Build Logseq static + publishing JS
