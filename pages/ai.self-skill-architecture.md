@@ -1,4 +1,4 @@
-tags:: self-skill, AI,harness
+tags:: self-skill
 categories:: 技术
 public:: true
 

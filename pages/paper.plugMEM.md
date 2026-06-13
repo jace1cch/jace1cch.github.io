@@ -1,4 +1,4 @@
-tags:: paper, memory, AI
+tags:: paper, AI
 public:: true
 
 ## 摘要理解

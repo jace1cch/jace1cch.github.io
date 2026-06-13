@@ -1,4 +1,4 @@
-tags:: workflow, self
+tags:: workflow
 public:: true
 
 # 个人工作流

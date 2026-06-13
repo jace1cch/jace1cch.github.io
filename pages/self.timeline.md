@@ -1,4 +1,4 @@
-tags:: self, timeline
+tags:: personal
 public:: true
 
 参见 [[ai.self-skill-architecture]] 中的持续进化理念
