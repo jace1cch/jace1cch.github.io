@@ -5,6 +5,8 @@ public:: true
 
 ## 科研
 
+参考 [[ai.self-skill-architecture]] 的自我进化思路，结合 [[paper.plugMEM]] 的记忆管理
+
 第一配置读图能力
 
 论文存放本地，用网页ai读取，节省token

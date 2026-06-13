@@ -10,6 +10,8 @@ public:: true
 
 Self-skill 就是对这个问题的工程化回答。
 
+与 [[paper.plugMEM]] 在记忆管理上的探索互补，同时服务于 [[sop.self]] 中定义的个人工作流。
+
 项目地址：[github.com/jace1cch/self-skill](https://github.com/jace1cch/self-skill)
 
 ---

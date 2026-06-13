@@ -1,6 +1,8 @@
 tags:: self, timeline
 public:: true
 
+参见 [[ai.self-skill-architecture]] 中的持续进化理念
+
 2002-12,birth,contry boy
 2002-2011,ShenZhen,study,live with parents
 2011-2014,local home,nomean day,study
