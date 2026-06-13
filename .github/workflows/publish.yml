@@ -1,4 +1,4 @@
-name: Deploy www/
+name: Publish Logseq SPA (with Graph)
 
 on:
   push:
@@ -14,20 +14,106 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  LOGSEQ_VERSION: "0.10.15"
+
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 克隆 Logseq 源码（只取指定 tag）
+      - name: Checkout Logseq source
+        uses: actions/checkout@v4
+        with:
+          repository: logseq/logseq
+          path: .logseq-logseq
+          ref: ${{ env.LOGSEQ_VERSION }}
+          fetch-depth: 1
+
+      # 克隆 publish-spa 工具
+      - name: Checkout publish-spa
+        uses: actions/checkout@v4
+        with:
+          repository: logseq/publish-spa
+          path: .logseq-publish-spa
+          ref: v0.3.1
+
+      # 📌 关键补丁：在 publishing.cljs 中加入 graph handler 引用
+      # 防止 Closure 编译器树摇掉图谱模块
+      - name: Patch publishing.cljs to include graph handler
+        run: |
+          PATCH_FILE=".logseq-logseq/src/main/frontend/publishing.cljs"
+          # 在 :require 列表末尾加入 graph handler
+          sed -i '/frontend.components.reference/a\            [frontend.handler.graph :as graph-handler]' "$PATCH_FILE"
+          grep "graph-handler" "$PATCH_FILE"
+          echo "✅ 补丁已应用"
+
+      - name: Set up Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          cli: 1.11.1.1182
+          bb: 1.2.174
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache Logseq static
+        uses: actions/cache@v3
+        id: logseq-static-all
+        with:
+          path: .logseq-logseq/static
+          key: ${{ runner.os }}-logseq-static-all-${{ env.LOGSEQ_VERSION }}-graph-fix
+
+      - name: Build Logseq static + publishing JS
+        if: steps.logseq-static-all.outputs.cache-hit != 'true'
+        run: |
+          cd .logseq-logseq
+          yarn install --frozen-lockfile
+          yarn gulp:build
+          clojure -M:cljs release publishing
+        shell: bash
+        timeout-minutes: 20
+
+      # 安装 publish-spa 依赖并导出
+      - name: Install publish-spa deps
+        run: |
+          cd .logseq-publish-spa
+          yarn install --frozen-lockfile
+
+      - name: Fetch nbb deps
+        run: |
+          cd .logseq-publish-spa
+          yarn nbb-logseq -e ':fetching-deps'
+
+      - name: Export graph to www/
+        run: |
+          mkdir -p www
+          cd .logseq-publish-spa
+          node publish_spa.mjs \
+            ${{ github.workspace }}/www \
+            --static-directory ${{ github.workspace }}/.logseq-logseq/static \
+            --directory ${{ github.workspace }}/tech \
+            --theme-mode light
+
+      - name: Add .nojekyll
+        run: touch www/.nojekyll
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./www
+
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    needs: build
     steps:
-      - uses: actions/checkout@v4
-      - name: Add .nojekyll
-        run: touch www/.nojekyll
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./www
       - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v4
