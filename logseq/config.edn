@@ -2,4 +2,6 @@
  :publishing/output-dir "www"
  :publishing/all-pages-publishing? true
  :favorites []
+ :graph/settings {:journal? false
+ :builtin-pages? false}
 }
