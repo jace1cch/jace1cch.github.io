@@ -45,10 +45,16 @@ jobs:
       - name: Patch publishing.cljs to include graph handler
         run: |
           PATCH_FILE=".logseq-logseq/src/main/frontend/publishing.cljs"
-          # 在 :require 列表末尾加入 graph handler
-          sed -i '/frontend.components.reference/a\            [frontend.handler.graph :as graph-handler]' "$PATCH_FILE"
-          grep "graph-handler" "$PATCH_FILE"
-          echo "✅ 补丁已应用"
+          # 1. 在 :require 列表中加入 graph-handler
+          sed -i 's/\[frontend.components.whiteboard :as whiteboard\]/[frontend.components.whiteboard :as whiteboard]\n            [frontend.handler.graph :as graph-handler]/' "$PATCH_FILE"
+          # 2. 文件末尾加入 defonce 强制引用（防止 Closure 树摇）
+          echo '(defonce _graph-ref graph-handler/build-global-graph)' >> "$PATCH_FILE"
+          grep -n "graph-handler" "$PATCH_FILE"
+          echo "✅ 补丁已应用（require + defonce）"
+
+      # 清除旧的缓存（避免使用未打补丁的 static 缓存）
+      - name: Clear old static cache
+        run: rm -rf .logseq-logseq/static
 
       - name: Set up Clojure
         uses: DeLaGuardo/setup-clojure@master
@@ -66,7 +72,7 @@ jobs:
         id: logseq-static-all
         with:
           path: .logseq-logseq/static
-          key: ${{ runner.os }}-logseq-static-all-${{ env.LOGSEQ_VERSION }}-graph-fix
+          key: ${{ runner.os }}-logseq-static-all-${{ env.LOGSEQ_VERSION }}-graph-fix-v2
 
       - name: Build Logseq static + publishing JS
         if: steps.logseq-static-all.outputs.cache-hit != 'true'
