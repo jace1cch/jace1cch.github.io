@@ -1,3 +1,5 @@
+title:: PLUGMEM：插件式长期记忆模块
+tags:: paper, memory, AI
 public:: true
 
 ## 摘要理解
