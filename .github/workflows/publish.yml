@@ -1,4 +1,4 @@
-name: Publish Logseq SPA
+name: Publish Logseq SPA (with Graph)
 
 on:
   push:
@@ -14,19 +14,95 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  LOGSEQ_VERSION: "0.10.6"
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Logseq Publish
-        uses: logseq/publish-spa@main
+      # 克隆 Logseq 源码
+      - name: Checkout Logseq source
+        uses: actions/checkout@v4
         with:
-          graph-directory: ./tech
-          output-directory: www
-          version: 0.10.6
-          accent-color: blue
+          repository: logseq/logseq
+          path: .logseq-logseq
+          ref: ${{ env.LOGSEQ_VERSION }}
+          fetch-depth: 1
+
+      # 克隆 publish-spa（含导出脚本）
+      - name: Checkout publish-spa
+        uses: actions/checkout@v4
+        with:
+          repository: logseq/publish-spa
+          path: .logseq-publish-spa
+          ref: main
+
+      # === 补丁：在 publishing.cljs init 函数中加入 graph 调用 ===
+      # 这样 Closure 编译器会从入口追踪到 build-global-graph，连带所有代码保留
+      - name: Patch init to include graph handler
+        run: |
+          FILE=".logseq-logseq/src/main/frontend/publishing.cljs"
+
+          # 补丁A: 加入 require
+          sed -i 's/\[frontend.components.whiteboard :as whiteboard\]/[frontend.components.whiteboard :as whiteboard]\n            [frontend.handler.graph :as graph-handler]/' "$FILE"
+
+          # 补丁B: 在 init 函数第一行插入 graph 调用
+          sed -i 's/(defn ^:export init \[\]/(defn ^:export init []\n  (try (graph-handler\/build-global-graph "light" {:orphan-pages? true}) (catch js\/Error _ nil))/' "$FILE"
+
+          echo "=== 验证 ==="
+          grep -n "graph-handler" "$FILE"
+          grep -A2 "defn ^:export init" "$FILE"
+
+      - name: Set up Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          cli: 1.11.1.1182
+          bb: 1.2.174
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache Logseq static
+        uses: actions/cache@v3
+        id: logseq-static-all
+        with:
+          path: .logseq-logseq/static
+          key: ${{ runner.os }}-logseq-patched-${{ env.LOGSEQ_VERSION }}-v7
+
+      - name: Build Logseq static + publishing JS
+        if: steps.logseq-static-all.outputs.cache-hit != 'true'
+        run: |
+          cd .logseq-logseq
+          yarn install --frozen-lockfile
+          yarn gulp:build
+          clojure -M:cljs release publishing
+        shell: bash
+        timeout-minutes: 20
+
+      - name: Install publish-spa deps
+        run: |
+          cd .logseq-publish-spa
+          yarn install --frozen-lockfile
+
+      - name: Fetch nbb deps
+        run: |
+          cd .logseq-publish-spa
+          yarn nbb-logseq -e ':fetching-deps'
+
+      - name: Export graph to www/
+        run: |
+          mkdir -p www
+          cd .logseq-publish-spa
+          node publish_spa.mjs \
+            ${{ github.workspace }}/www \
+            --static-directory ${{ github.workspace }}/.logseq-logseq/static \
+            --directory ${{ github.workspace }}/tech \
+            --theme-mode light
 
       - name: Add .nojekyll
         run: touch www/.nojekyll
