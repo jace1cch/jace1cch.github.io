@@ -1,4 +1,4 @@
-name: Publish Logseq SPA
+name: Publish Logseq SPA (with Graph)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -14,25 +14,120 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  LOGSEQ_VERSION: "0.10.6"
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Logseq Publish
-        uses: logseq/publish-spa@main
+      # 克隆 Logseq 源码
+      - name: Checkout Logseq source
+        uses: actions/checkout@v4
         with:
-          graph-directory: ./tech
-          output-directory: www
-          version: 0.10.6
-          accent-color: blue
+          repository: logseq/logseq
+          path: .logseq-logseq
+          ref: ${{ env.LOGSEQ_VERSION }}
+          fetch-depth: 1
 
-      - name: Add .nojekyll file
+      # 克隆 publish-spa（含导出脚本）
+      - name: Checkout publish-spa
+        uses: actions/checkout@v4
+        with:
+          repository: logseq/publish-spa
+          path: .logseq-publish-spa
+          ref: main
+
+      # 关键补丁：在 publishing.cljs 中加入 graph-handler
+      # 防止 Closure 编译器树摇掉图谱数据构建函数
+      - name: Apply patch to include graph handler
+        run: |
+          PATCH_FILE=".logseq-logseq/src/main/frontend/publishing.cljs"
+
+          echo "=== 补丁前: require 列表 ==="
+          grep -A5 "whiteboard" "$PATCH_FILE"
+
+          # 补丁A: 在 require 中加入 graph-handler
+          sed -i 's/\[frontend.components.whiteboard :as whiteboard\]/[frontend.components.whiteboard :as whiteboard]\n            [frontend.handler.graph :as graph-handler]/' "$PATCH_FILE"
+
+          # 补丁B: 文件末尾加入 defonce 强制引用
+          echo '(defonce _graph-ref graph-handler/build-global-graph)' >> "$PATCH_FILE"
+
+          echo ""
+          echo "=== 补丁后: require 列表 ==="
+          grep -A5 "whiteboard" "$PATCH_FILE"
+
+          echo ""
+          echo "=== 补丁后: 文件末尾 ==="
+          tail -3 "$PATCH_FILE"
+
+          # 严格验证
+          COUNT=$(grep -c 'graph-handler' "$PATCH_FILE")
+          echo ""
+          echo "graph-handler 引用次数: $COUNT"
+          if [ "$COUNT" -lt 2 ]; then
+            echo "❌ 补丁失败！graph-handler 引用不足"
+            exit 1
+          fi
+          echo "✅ 补丁验证通过"
+
+      - name: Set up Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          cli: 1.11.1.1182
+          bb: 1.2.174
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 缓存 Logseq 静态文件（KEY 含版本号 + 补丁标记）
+      - name: Cache Logseq static
+        uses: actions/cache@v3
+        id: logseq-static-all
+        with:
+          path: .logseq-logseq/static
+          key: ${{ runner.os }}-logseq-static-${{ env.LOGSEQ_VERSION }}-v4
+
+      # 构建 Logseq（仅缓存未命中时执行，约12分钟）
+      - name: Build Logseq static + publishing JS
+        if: steps.logseq-static-all.outputs.cache-hit != 'true'
+        run: |
+          cd .logseq-logseq
+          yarn install --frozen-lockfile
+          yarn gulp:build
+          clojure -M:cljs release publishing
+        shell: bash
+        timeout-minutes: 20
+
+      # 安装 publish-spa 依赖
+      - name: Install publish-spa deps
+        run: |
+          cd .logseq-publish-spa
+          yarn install --frozen-lockfile
+
+      # 获取 nbb 依赖
+      - name: Fetch nbb deps
+        run: |
+          cd .logseq-publish-spa
+          yarn nbb-logseq -e ':fetching-deps'
+
+      # 导出图谱
+      - name: Export graph to www/
+        run: |
+          mkdir -p www
+          cd .logseq-publish-spa
+          node publish_spa.mjs \
+            ${{ github.workspace }}/www \
+            --static-directory ${{ github.workspace }}/.logseq-logseq/static \
+            --directory ${{ github.workspace }}/tech \
+            --theme-mode light
+
+      - name: Add .nojekyll
         run: touch www/.nojekyll
-
-      - name: Generate graph visualization
-        run: node scripts/inject-graph.js
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
