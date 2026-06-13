@@ -46,31 +46,39 @@ jobs:
         run: |
           PATCH_FILE=".logseq-logseq/src/main/frontend/publishing.cljs"
 
-          echo "=== 补丁前: require 列表 ==="
+          echo "=== 补丁前 ==="
           grep -A5 "whiteboard" "$PATCH_FILE"
 
           # 补丁A: 在 require 中加入 graph-handler
           sed -i 's/\[frontend.components.whiteboard :as whiteboard\]/[frontend.components.whiteboard :as whiteboard]\n            [frontend.handler.graph :as graph-handler]/' "$PATCH_FILE"
 
-          # 补丁B: 文件末尾加入 defonce 强制引用
-          echo '(defonce _graph-ref graph-handler/build-global-graph)' >> "$PATCH_FILE"
+          # 补丁B: 追加导出语句 + 强制调用
+          cat >> "$PATCH_FILE" << 'EOF'
+
+;; === PATCH: Force include graph handler (prevents Closure tree-shaking) ===
+(js/goog.exportSymbol "LogseqGraph" graph-handler/build-global-graph)
+
+(defn- -keep-graph
+  []
+  (try (graph-handler/build-global-graph "light" {:orphan-pages? true})
+       (catch js/Error _ nil)))
+EOF
 
           echo ""
-          echo "=== 补丁后: require 列表 ==="
+          echo "=== 补丁后 ==="
           grep -A5 "whiteboard" "$PATCH_FILE"
-
-          echo ""
-          echo "=== 补丁后: 文件末尾 ==="
-          tail -3 "$PATCH_FILE"
+          echo "..."
+          tail -8 "$PATCH_FILE"
 
           # 严格验证
           COUNT=$(grep -c 'graph-handler' "$PATCH_FILE")
           echo ""
           echo "graph-handler 引用次数: $COUNT"
-          if [ "$COUNT" -lt 2 ]; then
-            echo "❌ 补丁失败！graph-handler 引用不足"
+          if [ "$COUNT" -lt 3 ]; then
+            echo "❌ 补丁失败！graph-handler 引用不足 ($COUNT < 3)"
             exit 1
           fi
+          grep "exportSymbol" "$PATCH_FILE" || (echo "❌ exportSymbol 缺失" && exit 1)
           echo "✅ 补丁验证通过"
 
       - name: Set up Clojure
@@ -90,7 +98,7 @@ jobs:
         id: logseq-static-all
         with:
           path: .logseq-logseq/static
-          key: ${{ runner.os }}-logseq-static-${{ env.LOGSEQ_VERSION }}-v4
+          key: ${{ runner.os }}-logseq-static-${{ env.LOGSEQ_VERSION }}-v5
 
       # 构建 Logseq（仅缓存未命中时执行，约12分钟）
       - name: Build Logseq static + publishing JS
