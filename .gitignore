@@ -1,8 +1,11 @@
 # Logseq
+tech/logseq/bak/
+tech/logseq/.recycle/
+tech/logseq/.db/
+tech/logseq/*.md
 logseq/bak/
 logseq/.recycle/
 logseq/.db/
-logseq/*.md
 
 # OS
 .DS_Store
