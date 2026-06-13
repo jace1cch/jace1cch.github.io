@@ -26,6 +26,8 @@ jobs:
           version: 0.10.15
       - name: Add .nojekyll
         run: touch www/.nojekyll
+      - name: Generate graph page
+        run: node scripts/build-graph.js tech/pages tech/journals www/graph.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
